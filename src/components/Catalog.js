@@ -1,87 +1,251 @@
-import React, { useState, useEffect } from 'react';
-import { db, storage } from '../firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import {
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  Card,
+  Modal,
+  Badge
+} from "react-bootstrap";
 
 const Catalog = () => {
   const [lenses, setLenses] = useState([]);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("formManufacturer");
+  const [selectedValue, setSelectedValue] = useState(null);
+  const [filteredLenses, setFilteredLenses] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const lensesCollection = collection(db, "lenses");
 
-  const lensesCollection = collection(db, 'lenses');
+  const navigate = useNavigate();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [lensToDeleteId, setLensToDeleteId] = useState(null);
+
+  const handleCloseDeleteModal = () => setShowDeleteModal(false);
+  const handleShowDeleteModal = (id) => {
+    setLensToDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteLens = () => {
+    if (lensToDeleteId) {
+      deleteLens(lensToDeleteId);
+      setLensToDeleteId(null);
+      handleCloseDeleteModal();
+    }
+  };
 
   // Fetch lenses from Firestore
   useEffect(() => {
     const fetchLenses = async () => {
       const data = await getDocs(lensesCollection);
-      setLenses(data.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const lensesData = data.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setLenses(lensesData);
+      setFilteredLenses(lensesData); // Set initial lenses to display
     };
     fetchLenses();
-  }, []);
+  }, [lensesCollection]);
 
-  // Add lens
-  const addLens = async () => {
-    if (!image) return;
+  // Filter lenses based on search term and selected filter
+  useEffect(() => {
+    let filtered = lenses;
 
-    const imageRef = ref(storage, `images/${image.name}`);
-    await uploadBytes(imageRef, image);
-    const imageUrl = await getDownloadURL(imageRef);
+    if (searchTerm) {
+      filtered = filtered.filter((lens) =>
+        lens.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-    await addDoc(lensesCollection, {
-      name,
-      description,
-      image: imageUrl,
-    });
+    if (selectedValue) {
+      filtered = filtered.filter(
+        (lens) => lens[selectedFilter] === selectedValue
+      );
+    }
+    if (selectedCategory) {
+        filtered = filtered.filter((lens) =>
+          lens.category && lens.category.some((cat) => cat.category === selectedCategory)
+        );
+      }
 
-    setName('');
-    setDescription('');
-    setImage(null);
-  };
+    setFilteredLenses(filtered);
+  }, [searchTerm, selectedValue, selectedFilter, selectedCategory, lenses]);
 
   // Delete lens
   const deleteLens = async (id) => {
-    await deleteDoc(doc(db, 'lenses', id));
+    await deleteDoc(doc(db, "lenses", id));
   };
 
-  return (
-    <div>
-      <h1>Lens Catalog</h1>
-      <form onSubmit={(e) => { e.preventDefault(); addLens(); }}>
-        <input
-          type="text"
-          placeholder="Lens Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-        <input
-          type="file"
-          onChange={(e) => setImage(e.target.files[0])}
-          required
-        />
-        <button type="submit">Add Lens</button>
-      </form>
+  const uniqueCategories = Array.from(
+    new Set(
+      lenses.flatMap((lens) =>
+        lens.category ? lens.category.map((cat) => cat.category) : []
+      )
+    )
+  );
+  // Get unique values for the selected filter
+  const uniqueValues = (field) => {
+    return [...new Set(lenses.map((lens) => lens[field]))];
+  };
 
-      <h2>Existing Lenses</h2>
-      <ul>
-        {lenses.map(lens => (
-          <li key={lens.id}>
-            <h3>{lens.name}</h3>
-            <p>{lens.description}</p>
-            <img src={lens.image} alt={lens.name} width={100} />
-            <button onClick={() => deleteLens(lens.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-    </div>
+  const formManufacturers = uniqueValues("formManufacturer");
+  const focusType = uniqueValues("focusType"); // Example: Add more fields as needed
+
+  const filterOptions = [
+    { label: "Manufacturer", value: "formManufacturer", options: formManufacturers },
+    { label: "Type", value: "focusType", options: focusType },
+    // Add other fields here as needed
+  ];
+
+  return (
+    <>
+      <Container className="lens-catalog">
+        <Row>
+        <div className="mb-3 d-flex align-items-center justify-content-between">
+          <h1>Lens Catalog</h1>
+        </div>
+        </Row>
+
+        {/* Search and Filter Controls */}
+        <Form.Group controlId="search" className="mb-3">
+          <Form.Control
+            type="text"
+            placeholder="Search lenses..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Form.Group>
+        <Row>
+          <Col>
+            <Form.Group controlId="filterSelect" className="mb-3">
+              <Form.Select
+                value={selectedFilter}
+                onChange={(e) => setSelectedFilter(e.target.value)}
+              >
+                {filterOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="valueSelect" className="mb-3">
+              <Form.Select
+                value={selectedValue || ""}
+                onChange={(e) => setSelectedValue(e.target.value || null)}
+              >
+                <option value="">--Select an option--</option>
+                {filterOptions
+                  .find((option) => option.value === selectedFilter)
+                  ?.options.map((optionValue, index) => (
+                    <option key={index} value={optionValue}>
+                      {optionValue}
+                    </option>
+                  ))}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+        <Row>
+            {/* Category Badges */}
+        <div className="mb-3">
+          {uniqueCategories.map((category, index) => (
+            <Badge
+              key={index}
+              onClick={() => setSelectedCategory(category)}
+              className="me-2"
+              bg={category === selectedCategory ? "primary" : "secondary"}
+              style={{ cursor: "pointer" }}
+            >
+              {category}
+            </Badge>
+          ))}
+          {selectedCategory && (
+            <Badge
+              onClick={() => setSelectedCategory(null)}
+              bg="danger"
+              style={{ cursor: "pointer", marginLeft: "10px" }}
+            >
+              Clear Category Filter
+            </Badge>
+          )}
+        </div>
+        </Row>
+
+        {/* Display Filtered Lenses */}
+        <Row>
+          {filteredLenses.length > 0 ? (
+            filteredLenses.map((lens) => (
+                <React.Fragment key={lens.id}>
+                {/* Lens Card */}
+                <Col md={4} key={lens.id} className="mb-4">
+                  <Card
+                    onClick={() => navigate(`/lens/${lens.id}`)}
+                    style={{ cursor: "pointer" }}
+                    className="position-relative card"
+                  >
+                    <Card.Title className="justify-content-end m-0">
+                    <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShowDeleteModal(lens.id);
+                          }}
+                          className="delete-button"
+                        >
+                          <i className="bi bi-x-lg"></i>
+                        </Button>
+                  </Card.Title>
+
+                    <Card.Body>
+                      <img src={lens.mainImage} alt={lens.name} width={100} />
+                    </Card.Body>
+                  </Card>
+                  <Card.Title className="d-flex justify-content-center mt-3 text-center">
+                    {lens.title}
+                  </Card.Title>
+                </Col>
+
+                {/* Delete Lens Modal  */}
+                <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
+                  <Modal.Header closeButton>
+                    <Modal.Title>Confirm delete</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body>Are you show you want to delete </Modal.Body>
+                  <Modal.Footer>
+                    <Button
+                      variant="secondary"
+                      onClick={handleCloseDeleteModal}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => {handleDeleteLens()}}
+                    >
+                      Delete
+                    </Button>
+                  </Modal.Footer>
+                </Modal>
+              </React.Fragment>
+            ))
+          ) : (
+            <p>No lenses found.</p>
+          )}
+        </Row>
+      </Container>
+    </>
   );
 };
 

@@ -1,20 +1,31 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 
-function AddLens() {
+const AddLens = () => {
   const [formData, setFormData] = useState({
-    make: "",
-    model: "",
-    focalLength: "",
-    maxAperture: "",
-    lensMount: "",
-    filterSize: "",
-    imgUrl: "", // Will hold the Imgur image URL
+    title: '',
+    description: '',
+    manufacturer: '',
+    focalLength: '',
+    maxAperture: '',
+    lensMount: '',
+    lensFormat: '',
+    focusType: '',
+    imageStabilization: '',
+    filterSize: '',
+    minAperture: '',
+    angleOfView: '',
+    minFocusDistance: '',
+    maxMagnification: '',
+    opticalDesign: '',
+    diaphragmBlades: '',
+    dimensions: '',
+    maxExtension: '',
+    weight: '',
   });
-  const [imageFile, setImageFile] = useState(null); // Store the selected image file
-  const [uploading, setUploading] = useState(false); // Track the upload status
+  
+  const [image, setImage] = useState(null); // State for the image
 
-  // Handle input changes for form fields
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -22,170 +33,314 @@ function AddLens() {
     });
   };
 
-  // Handle image file input change
   const handleImageChange = (e) => {
-    setImageFile(e.target.files[0]); // Store the image file on file input change
-    console.log("Selected image file:", e.target.files[0]); // Debugging log for image file
+    setImage(e.target.files[0]); // Get the uploaded file
   };
 
-  // Function to upload image to Imgur
-  const uploadImageToImgur = async () => {
-    const clientId = '131a16b091d6516'; // Use Imgur Client ID for anonymous uploads
-  
-    if (!imageFile) {
-      alert('Image missing.');
-      return;
-    }
-  
-    const imgurFormData = new FormData();
-    imgurFormData.append("image", imageFile);
-  
-    try {
-      console.log("Uploading image to Imgur..."); // Debugging log before upload
-      const response = await axios.post(
-        "https://api.imgur.com/3/image",
-        imgurFormData,
-        {
-          headers: {
-            Authorization: `Client-ID ${clientId}`, // Use Client-ID for anonymous uploads
-          },
-        }
-      );
-      console.log("Image upload successful:", response.data); // Debugging log after successful upload
-      return response.data.data.link; // Return the image URL from Imgur
-    } catch (error) {
-      console.error("Error uploading image:", error); // Debugging log for errors
-      return null;
-    }
-  };
-  
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Handle image upload here (if needed)
+    // You can upload the image to a server or Imgur here
+    // For example, using FormData to send both form data and image
 
-    setUploading(true);
-
-    // Upload the image to Imgur
-    const uploadedImageUrl = await uploadImageToImgur();
-
-    if (!uploadedImageUrl) {
-      setUploading(false);
-      return;
+    const formDataToSubmit = new FormData();
+    for (const key in formData) {
+      formDataToSubmit.append(key, formData[key]);
+    }
+    if (image) {
+      formDataToSubmit.append('image', image); // Append image to FormData
     }
 
-    try {
-      // Prepare lens data with the Imgur image URL
-      const lensData = { ...formData, imgUrl: uploadedImageUrl };
-
-      // Log the lens data to ensure it's correct
-      console.log("Submitting lens data to the API:", lensData); // Debugging log before API submission
-
-      // Send the POST request to your API
-      const response = await axios.post("https://lens-api-7hy7.onrender.com/lenses", lensData);
-      console.log("Lens added successfully:", response.data);
-
-      // Clear form after successful submission
-      setFormData({
-        make: "",
-        model: "",
-        focalLength: "",
-        maxAperture: "",
-        lensMount: "",
-        filterSize: "",
-        imgUrl: "",
-      });
-      setImageFile(null);
-    } catch (error) {
-      // Improved error handling
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        alert(`Error: ${error.response.data.message}`);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        alert("No response from the server. Please try again later.");
-      } else {
-        console.error("Error setting up the request:", error.message);
-        alert("Error: " + error.message);
-      }
-    } finally {
-      setUploading(false);
-    }
+    // Replace this with your actual submission logic
+    console.log(formDataToSubmit);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>Add a New Lens</h3>
-      <label>
-        Manufacturer:
-        <select name="make" value={formData.make} onChange={handleChange}>
-          <option value="Nikon">Nikon</option>
-          <option value="Canon">Canon</option>
-          <option value="Sony">Sony</option>
-          <option value="Fujifilm">Fujifilm</option>
-          <option value="Panasonic">Panasonic</option>
-        </select>
-      </label>
-      <br />
-      <label>
-        Model:
-        <input
-          type="text"
-          name="model"
-          value={formData.model}
-          onChange={handleChange}
-        />
-      </label>
-      <br />
-      <label>
-        Focal Length:
-        <input
-          type="text"
-          name="focalLength"
-          value={formData.focalLength}
-          onChange={handleChange}
-        />
-      </label>
-      <br />
-      <label>
-        Maximum Aperture:
-        <input
-          type="text"
-          name="maxAperture"
-          value={formData.maxAperture}
-          onChange={handleChange}
-        />
-      </label>
-      <br />
-      <label>
-        Lens Mount:
-        <input
-          type="text"
-          name="lensMount"
-          value={formData.lensMount}
-          onChange={handleChange}
-        />
-      </label>
-      <br />
-      <label>
-        Filter Size:
-        <input
-          type="text"
-          name="filterSize"
-          value={formData.filterSize}
-          onChange={handleChange}
-        />
-      </label>
-      <br />
-      <label>
-        Upload Image:
-        <input type="file" onChange={handleImageChange} />
-      </label>
-      <br />
-      <button type="submit" disabled={uploading}>
-        {uploading ? "Uploading..." : "Add Lens"}
-      </button>
-    </form>
+    <Container>
+      <h1>Add a New Lens</h1>
+      <Form onSubmit={handleSubmit}>
+        {/* Title */}
+        <Form.Group controlId="formTitle" className="mb-3">
+          <Form.Label>Title</Form.Label>
+          <Form.Control
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+          />
+        </Form.Group>
+        {/* Description */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formDescription" className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control as="textarea" rows={3}
+                name="formDescription"
+                value={formData.formDescription}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        {/* Focal Length and Maximum Aperture */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formManufacturer" className="mb-3">
+              <Form.Label>Manufacturer</Form.Label>
+              <Form.Control
+                type="text"
+                name="formManufacturer"
+                value={formData.formManufacturer}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+        {/* Focal Length and Maximum Aperture */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formFocalLength" className="mb-3">
+              <Form.Label>Focal Length</Form.Label>
+              <Form.Control
+                type="text"
+                name="focalLength"
+                value={formData.focalLength}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formMaxAperture" className="mb-3">
+              <Form.Label>Maximum Aperture</Form.Label>
+              <Form.Control
+                type="text"
+                name="maxAperture"
+                value={formData.maxAperture}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Lens Mount and Lens Format Coverage */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formLensMount" className="mb-3">
+              <Form.Label>Lens Mount</Form.Label>
+              <Form.Control
+                type="text"
+                name="lensMount"
+                value={formData.lensMount}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formLensFormat" className="mb-3">
+              <Form.Label>Lens Format Coverage</Form.Label>
+              <Form.Control
+                type="text"
+                name="lensFormat"
+                value={formData.lensFormat}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Focus Type and Image Stabilization */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formFocusType" className="mb-3">
+              <Form.Label>Focus Type</Form.Label>
+              <Form.Control
+                type="text"
+                name="focusType"
+                value={formData.focusType}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formImageStabilization" className="mb-3">
+              <Form.Label>Image Stabilization</Form.Label>
+              <Form.Control
+                type="text"
+                name="imageStabilization"
+                value={formData.imageStabilization}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Filter Size and Minimum Aperture */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formFilterSize" className="mb-3">
+              <Form.Label>Filter Size</Form.Label>
+              <Form.Control
+                type="text"
+                name="filterSize"
+                value={formData.filterSize}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formMinAperture" className="mb-3">
+              <Form.Label>Minimum Aperture</Form.Label>
+              <Form.Control
+                type="text"
+                name="minAperture"
+                value={formData.minAperture}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Angle of View and Minimum Focus Distance */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formAngleOfView" className="mb-3">
+              <Form.Label>Angle of View</Form.Label>
+              <Form.Control
+                type="text"
+                name="angleOfView"
+                value={formData.angleOfView}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formMinFocusDistance" className="mb-3">
+              <Form.Label>Minimum Focus Distance</Form.Label>
+              <Form.Control
+                type="text"
+                name="minFocusDistance"
+                value={formData.minFocusDistance}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Maximum Magnification and Optical Design */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formMaxMagnification" className="mb-3">
+              <Form.Label>Maximum Magnification</Form.Label>
+              <Form.Control
+                type="text"
+                name="maxMagnification"
+                value={formData.maxMagnification}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formOpticalDesign" className="mb-3">
+              <Form.Label>Optical Design</Form.Label>
+              <Form.Control
+                type="text"
+                name="opticalDesign"
+                value={formData.opticalDesign}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Diaphragm Blades and Dimensions */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formDiaphragmBlades" className="mb-3">
+              <Form.Label>Diaphragm Blades</Form.Label>
+              <Form.Control
+                type="text"
+                name="diaphragmBlades"
+                value={formData.diaphragmBlades}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formDimensions" className="mb-3">
+              <Form.Label>Dimensions</Form.Label>
+              <Form.Control
+                type="text"
+                name="dimensions"
+                value={formData.dimensions}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Length at Maximum Extension and Weight */}
+        <Row>
+          <Col>
+            <Form.Group controlId="formMaxExtension" className="mb-3">
+              <Form.Label>Length at Maximum Extension</Form.Label>
+              <Form.Control
+                type="text"
+                name="maxExtension"
+                value={formData.maxExtension}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+          <Col>
+            <Form.Group controlId="formWeight" className="mb-3">
+              <Form.Label>Weight</Form.Label>
+              <Form.Control
+                type="text"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Image Upload */}
+        <Form.Group controlId="formImage" className="mb-3">
+          <Form.Label>Upload Image</Form.Label>
+          <Form.Control
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            
+          />
+        </Form.Group>
+
+        <Button variant="primary" type="submit">
+          Add Lens
+        </Button>
+      </Form>
+    </Container>
   );
-}
+};
 
 export default AddLens;
