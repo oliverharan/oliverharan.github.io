@@ -6,6 +6,8 @@ import Catalog from './components/Catalog';
 import AddLens from './components/AddLens';
 import LensDetails from './components/LensDetails';
 import LensModal from "./components/LensModal";
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 import './App.css';
 
@@ -24,9 +26,19 @@ const App = () => {
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav>
-              <Button variant="outline-light" onClick={handleShow} className="circle-btn">
-              <i className="bi bi-plus"></i>
-          </Button>
+              <OverlayTrigger
+          key="bottom"
+          placement="bottom"
+          overlay={
+            <Tooltip id={`tooltip-add-lens`}>
+              Add lens
+            </Tooltip>
+          }
+        >
+          <Button variant="outline-light" onClick={handleShow} className="circle-btn"><i className="bi bi-plus"></i></Button>
+          
+        </OverlayTrigger>
+          
           <LensModal showModal={showModal} handleClose={handleClose} />
 
               {/* <Nav.Link as={Link} to="/">Home</Nav.Link> */}

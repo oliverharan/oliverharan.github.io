@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
@@ -18,7 +18,6 @@ const Catalog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("formManufacturer");
   const [selectedValue, setSelectedValue] = useState(null);
-  const [filteredLenses, setFilteredLenses] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const lensesCollection = collection(db, "lenses");
 
@@ -50,34 +49,24 @@ const Catalog = () => {
         ...doc.data(),
       }));
       setLenses(lensesData);
-      setFilteredLenses(lensesData); // Set initial lenses to display
     };
     fetchLenses();
   }, [lensesCollection]);
 
-  // Filter lenses based on search term and selected filter
-  useEffect(() => {
-    let filtered = lenses;
-
-    if (searchTerm) {
-      filtered = filtered.filter((lens) =>
-        lens.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (selectedValue) {
-      filtered = filtered.filter(
-        (lens) => lens[selectedFilter] === selectedValue
-      );
-    }
-    if (selectedCategory) {
-        filtered = filtered.filter((lens) =>
-          lens.category && lens.category.some((cat) => cat.category === selectedCategory)
-        );
-      }
-
-    setFilteredLenses(filtered);
-  }, [searchTerm, selectedValue, selectedFilter, selectedCategory, lenses]);
+  const filteredLenses = useMemo(() => {
+    return lenses.filter((lens) => {
+      let matchesSearchTerm = searchTerm
+        ? lens.title.toLowerCase().includes(searchTerm.toLowerCase())
+        : true;
+      let matchesFilter = selectedValue
+        ? lens[selectedFilter] === selectedValue
+        : true;
+      let matchesCategory = selectedCategory
+        ? lens.category && lens.category.some((cat) => cat.category === selectedCategory)
+        : true;
+      return matchesSearchTerm && matchesFilter && matchesCategory;
+    });
+  }, [lenses, searchTerm, selectedFilter, selectedValue, selectedCategory]);
 
   // Delete lens
   const deleteLens = async (id) => {
@@ -102,7 +91,6 @@ const Catalog = () => {
   const filterOptions = [
     { label: "Manufacturer", value: "formManufacturer", options: formManufacturers },
     { label: "Type", value: "focusType", options: focusType },
-    // Add other fields here as needed
   ];
 
   return (

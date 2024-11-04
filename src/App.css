@@ -111,3 +111,8 @@ small {
   .lens-modal-checkbox label {
     min-width: 60px;
 }
+.bi-plus {
+  display: flex;
+  align-items: center;
+  height: 23px;
+}
