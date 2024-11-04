@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar, Nav, Container,Button } from 'react-bootstrap';
-// import Home from './components/Home';
 import Catalog from './components/Catalog';
 import AddLens from './components/AddLens';
 import LensDetails from './components/LensDetails';
