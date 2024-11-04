@@ -1,5 +1,8 @@
 @import '../node_modules/bootstrap-icons/font/bootstrap-icons.css';
 
+body {
+  overflow: hidden;
+}
 .App {
   display: flex;
   flex-direction: column;

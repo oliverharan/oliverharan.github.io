@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Navbar, Nav, Container,Button } from 'react-bootstrap';
+import { Navbar, Nav, Container } from 'react-bootstrap';
 import Catalog from './components/Catalog';
 import AddLens from './components/AddLens';
 import LensDetails from './components/LensDetails';
@@ -34,7 +34,7 @@ const App = () => {
             </Tooltip>
           }
         >
-          <Button variant="outline-light" onClick={handleShow} className="circle-btn"><i className="bi bi-plus"></i></Button>
+          <i onClick={handleShow} className="bi bi-plus-circle" style={{fontSize: '1.5em'}}></i>
           
         </OverlayTrigger>
           
