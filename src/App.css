@@ -117,3 +117,23 @@ small {
   align-items: center;
   height: 23px;
 }
+.card-icon-nikon {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  max-height: 30px;
+  width: unset !important;
+}
+.card-icon-fuji {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  max-width: 50px;
+}
+.card-icon-m42 {
+  position: absolute;
+  left: 10px;
+  top: 5px;
+  color: black;
+  font-weight: 900;
+}

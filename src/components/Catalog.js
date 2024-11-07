@@ -197,6 +197,23 @@ const Catalog = () => {
                   </Card.Title>
 
                     <Card.Body>
+                    {lens.lensMount === "F" && (
+          <img
+            src="/images/nikon_logo.svg"
+            alt="Nikon Logo"
+            className="card-icon-nikon"
+          />
+        )}
+        {lens.lensMount === "X" && (
+          <img
+            src="/images/fuji_logo.svg"
+            alt="Fuji Logo"
+            className="card-icon-fuji"
+            />
+        )}
+        {lens.lensMount === "M42" && (
+          <div className="card-icon-m42">M42</div>
+        )}
                       <img src={lens.mainImage} alt={lens.name} width={100} />
                     </Card.Body>
                   </Card>
